@@ -1,0 +1,30 @@
+[tool.poetry]
+package-mode = false
+
+[project]
+name = "influencer-research-rag"
+version = "0.1.0"
+description = "Designed to answer questions about Influencer Marketing based on latest scientific papers"
+authors = [
+    {name = "Rafael Belokurows"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "anthropic (>=0.99.0,<0.100.0)",
+    "chromadb (>=1.5.9,<2.0.0)",
+    "sentence-transformers (>=5.4.1,<6.0.0)",
+    "pdfplumber (>=0.11.9,<0.12.0)",
+    "streamlit (>=1.57.0,<2.0.0)",
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "torch (>=2.0.0)",
+    "transformers (==4.46.3)",
+    "accelerate (>=0.30.0)",
+    "huggingface-hub (==0.26.0)",
+    "tokenizers (==0.20.3)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
