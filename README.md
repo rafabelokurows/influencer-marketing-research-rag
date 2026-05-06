@@ -16,6 +16,8 @@ I work in influencer marketing analytics and kept running into the same problem:
 
 ## Demo
 
+![Demo screenshot](images/recording.gif)
+
 ![Demo screenshot](images/screenshot1.png)
 *Ask a question, get a cited answer pulled directly from your papers.*
 

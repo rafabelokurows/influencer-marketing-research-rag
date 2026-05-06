@@ -7,33 +7,89 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS
+# ── Styling ───────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
+    /* Main container */
+    .block-container {
+        padding-top: 2rem;
+        max-width: 860px;
+    }
+
+    /* Source citation boxes */
     .source-box {
-        background-color: #f8f9fa;
+        background-color: #161b22;
         border-left: 3px solid #4CAF50;
         padding: 10px 15px;
         margin: 5px 0;
         border-radius: 0 5px 5px 0;
         font-size: 0.85em;
+        font-family: monospace;
     }
+
+    /* Retrieved chunk boxes */
     .chunk-box {
-        background-color: #f0f0f0;
-        padding: 10px;
-        border-radius: 5px;
+        background-color: #0d1117;
+        border: 1px solid #30363d;
+        padding: 12px;
+        border-radius: 6px;
         font-size: 0.8em;
-        color: #555;
+        color: #8b949e;
         margin: 5px 0;
+        font-family: monospace;
     }
-    .stChatMessage {border-radius: 10px;}
+
+    /* Chat messages */
+    .stChatMessage {
+        border-radius: 10px;
+        border: 1px solid #30363d;
+    }
+
+    /* Sidebar */
+    .stSidebar {
+        border-right: 1px solid #30363d;
+    }
+
+    /* Example question buttons */
+    .stButton > button {
+        background-color: #161b22;
+        border: 1px solid #30363d;
+        color: #e6edf3;
+        border-radius: 6px;
+        font-size: 0.8em;
+        text-align: left;
+        transition: border-color 0.2s;
+    }
+    .stButton > button:hover {
+        border-color: #4CAF50;
+        color: #4CAF50;
+    }
+
+    /* Title styling */
+    h1 {
+        font-family: monospace;
+        letter-spacing: -0.5px;
+    }
+
+    /* Divider */
+    hr {
+        border-color: #30363d;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📚 Influencer Marketing Research Assistant")
-st.caption("Ask questions across your scientific paper library — answers include citations from the source papers.")
+# ── Header ────────────────────────────────────────────────────────────────────
+st.markdown("---")
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.title("📚 Influencer Research Assistant")
+    st.caption("Ask questions across your scientific paper library — answers include citations.")
+with col2:
+    st.caption("🟢 Model loaded")
+    st.caption("🗄️ DB connected")
+st.markdown("---")
 
-# Sidebar
+# ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("⚙️ Settings")
     top_k = st.slider(
@@ -41,7 +97,7 @@ with st.sidebar:
         min_value=2,
         max_value=10,
         value=5,
-        help="Higher = more context but slower answers"
+        help="Higher = more context for the model, but slower answers"
     )
 
     st.divider()
@@ -61,36 +117,46 @@ with st.sidebar:
 
     st.divider()
     st.header("🤖 Model info")
-    st.caption("LLM: Qwen2.5 1.5B Instruct (local)")
-    st.caption("Embeddings: all-MiniLM-L6-v2")
-    st.caption("Vector DB: ChromaDB (local)")
+    st.caption("**LLM:** Qwen2.5 1.5B Instruct")
+    st.caption("**Embeddings:** all-MiniLM-L6-v2")
+    st.caption("**Vector DB:** ChromaDB (local)")
+    st.caption("**Runs:** 100% offline")
 
     st.divider()
     if st.button("🗑️ Clear conversation", use_container_width=True):
         st.session_state["history"] = []
         st.rerun()
 
-# Session state
+# ── Session state ─────────────────────────────────────────────────────────────
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
-# Display conversation history
+# ── Conversation history ──────────────────────────────────────────────────────
 for item in st.session_state["history"]:
     with st.chat_message("user"):
         st.write(item["question"])
     with st.chat_message("assistant"):
         st.write(item["answer"])
         with st.expander(f"📎 {len(item['sources'])} source(s) retrieved"):
+            st.markdown("**Sources:**")
             for s in item["sources"]:
-                st.markdown(f'<div class="source-box">{s}</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="source-box">{s}</div>',
+                    unsafe_allow_html=True
+                )
             st.divider()
+            st.markdown("**Retrieved passages:**")
             for i, (chunk, meta) in enumerate(item["chunks"]):
                 st.markdown(f"**[{i+1}] {meta['paper']} — p.{meta['page']}**")
                 preview = chunk[:300] + "..." if len(chunk) > 300 else chunk
-                st.markdown(f'<div class="chunk-box">{preview}</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="chunk-box">{preview}</div>',
+                    unsafe_allow_html=True
+                )
 
-# Handle input — either from chat box or example button
+# ── Input handling ────────────────────────────────────────────────────────────
 question = st.chat_input("Ask a research question...")
+
 if "queued_question" in st.session_state:
     question = st.session_state.pop("queued_question")
 
@@ -99,19 +165,27 @@ if question:
         st.write(question)
 
     with st.chat_message("assistant"):
-        with st.spinner("Searching papers..."):
+        with st.spinner("Searching papers and generating answer..."):
             result = query(question, top_k=top_k)
 
         st.write(result["answer"])
 
         with st.expander(f"📎 {len(result['sources'])} source(s) retrieved"):
+            st.markdown("**Sources:**")
             for s in result["sources"]:
-                st.markdown(f'<div class="source-box">{s}</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="source-box">{s}</div>',
+                    unsafe_allow_html=True
+                )
             st.divider()
+            st.markdown("**Retrieved passages:**")
             for i, (chunk, meta) in enumerate(result["chunks"]):
                 st.markdown(f"**[{i+1}] {meta['paper']} — p.{meta['page']}**")
                 preview = chunk[:300] + "..." if len(chunk) > 300 else chunk
-                st.markdown(f'<div class="chunk-box">{preview}</div>', unsafe_allow_html=True)
+                st.markdown(
+                    f'<div class="chunk-box">{preview}</div>',
+                    unsafe_allow_html=True
+                )
 
         st.session_state["history"].append({
             "question": question,
